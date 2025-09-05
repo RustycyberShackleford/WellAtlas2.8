@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head><title>{{ header_title }}</title><link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"></head>
+<body>
+<header><h1 id="appTitle">{{ header_title }}</h1>
+<nav><a href="{{ url_for('index') }}">← Map</a> | <a href="{{ url_for('deleted_sites') }}">Deleted Sites</a></nav>
+</header>
+<main class="wrap">
+<section class="card">
+  <h2>Customers</h2>
+  <ul class="jobs">
+    {% for c in customers %}<li><a href="{{ url_for('customer_detail', cid=c['id']) }}">{{ c['name'] }}</a></li>{% else %}<li>No customers.</li>{% endfor %}
+  </ul>
+</section>
+</main>
+</body></html>

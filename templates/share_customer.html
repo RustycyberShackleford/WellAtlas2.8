@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head><title>{{ header_title }}</title><link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"></head>
+<body class="public">
+<header><h1 id="appTitle">{{ header_title }}</h1></header>
+<main class="wrap">
+<section class="card">
+  <h2>Customer: {{ customer['name'] }}</h2>
+  <p><strong>Address:</strong> {{ customer['address'] or '—' }}</p>
+  <p><strong>Phone:</strong> {{ customer['phone'] or '—' }}</p>
+  <p><strong>Email:</strong> {{ customer['email'] or '—' }}</p>
+</section>
+<section class="card">
+  <h3>Sites</h3>
+  {% for s in sites %}
+    <details>
+      <summary>{{ s['name'] }}</summary>
+      <ul class="jobs">
+        {% for j in site_jobs[s['id']] %}
+          <li>Job #{{ j['job_number'] }} — {{ j['job_category'] }}<br>{{ j['description'] }}</li>
+        {% else %}<li>No jobs.</li>{% endfor %}
+      </ul>
+    </details>
+  {% else %}<p>No sites.</p>{% endfor %}
+</section>
+</main>
+</body></html>
