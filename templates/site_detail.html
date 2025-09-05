@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head><title>{{ header_title }}</title><link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"></head>
+<body>
+<header>
+  <h1 id="appTitle">WellAtlas by Henry Suden</h1>
+  <nav><a href="{{ url_for('index') }}">Home</a> <a href="{{ url_for('customers_index') }}">Customers</a> <a href="{{ url_for('deleted_sites') }}">Deleted Sites</a></nav>
+</header>
+<main class="wrap">
+<section class="card">
+  <h2>{{ site['customer'] }} — {{ site['name'] }}</h2>
+  <p><strong>Coordinates:</strong> {{ site['latitude'] }}, {{ site['longitude'] }}</p>
+  <form method="post" action="{{ url_for('edit_site', site_id=site['id']) }}" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <input name="name" value="{{ site['name'] }}">
+    <input name="customer" value="{{ site['customer'] }}">
+    <input name="latitude" value="{{ site['latitude'] }}">
+    <input name="longitude" value="{{ site['longitude'] }}">
+    <textarea name="description" style="grid-column:1/-1;" placeholder="Description">{{ site['description'] or '' }}</textarea>
+    <div style="grid-column:1/-1;display:flex;gap:8px;">
+      <button type="submit">Save Site</button>
+    </div>
+  </form>
+  <form method="post" action="{{ url_for('delete_site', site_id=site['id']) }}"><button type="submit" class="link">Delete Site</button></form>
+</section>
+
+<section class="card">
+  <h3>Jobs</h3>
+  <ul class="list">
+    {% for j in jobs %}<li><a href="{{ url_for('job_detail', site_id=site['id'], job_id=j['id']) }}">Job #{{ j['job_number'] }} <span class="badge">{{ j['job_category'] }}</span></a></li>{% else %}<li>No jobs.</li>{% endfor %}
+  </ul>
+  <form method="post" action="{{ url_for('create_job', site_id=site['id']) }}" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+    <input name="job_number" placeholder="Job # (25xxx)">
+    <select name="job_category"><option>Domestic</option><option>Drilling</option><option>Ag</option><option>Electrical</option></select>
+    <textarea name="description" style="grid-column:1/-1;" placeholder="Job description"></textarea>
+    <button type="submit" class="primary" style="grid-column:1/-1;">Add Job</button>
+  </form>
+</section>
+
+<section class="card">
+  <h3>Site Notes</h3>
+  <ul class="list">{% for n in notes %}<li><small>{{ n['created_at'] }}</small><br>{{ n['body'] }}</li>{% else %}<li>No notes.</li>{% endfor %}</ul>
+  <form method="post" action="{{ url_for('add_site_note', site_id=site['id']) }}"><textarea name="body" placeholder="Add a note..."></textarea><button type="submit">Add Note</button></form>
+</section>
+
+<section class="card">
+  <h3>Site Photos</h3>
+  <div class="photos">
+    {% for p in photos %}<figure><img src="{{ url_for('uploaded_file', filename=p['filename']) }}" alt=""><figcaption>{{ p['caption'] or '' }}</figcaption></figure>{% else %}<p>No photos.</p>{% endfor %}
+  </div>
+</section>
+</main>
+</body></html>

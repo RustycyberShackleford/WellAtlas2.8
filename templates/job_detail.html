@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head><title>{{ header_title }}</title><link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"></head>
+<body>
+<header>
+  <h1 id="appTitle">WellAtlas by Henry Suden</h1>
+  <nav><a href="{{ url_for('site_detail', site_id=site['id']) }}">Back to Site</a> <a href="{{ url_for('index') }}">Home</a></nav>
+</header>
+<main class="wrap">
+<section class="card">
+  <h2>{{ site['customer'] }} — {{ site['name'] }}</h2>
+  <h3>Job #{{ job['job_number'] }} <span class="badge">{{ job['job_category'] }}</span></h3>
+  <p>{{ job['description'] or '' }}</p>
+</section>
+
+<section class="card">
+  <h3>Share</h3>
+  <button id="shareJobBtn" type="button" class="primary">Create Share Link (This Job Only)</button>
+  <input id="shareJobOut" style="width:100%;margin-top:6px" placeholder="Share link will appear here..." readonly>
+</section>
+
+<section class="card">
+  <h3>Photos</h3>
+  <div class="photos">
+    {% for p in jphotos %}<figure><img src="{{ url_for('uploaded_file', filename=p['filename']) }}" alt=""><figcaption>{{ p['caption'] or '' }}</figcaption></figure>{% else %}<p>No photos.</p>{% endfor %}
+  </div>
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('upload_job_photo', site_id=site['id'], job_id=job['id']) }}">
+    <input type="file" name="photo" accept="image/*">
+    <input type="text" name="caption" placeholder="Caption (optional)">
+    <button type="submit">Upload Photo</button>
+  </form>
+</section>
+
+<section class="card">
+  <h3>Job Notes</h3>
+  <ul class="list">{% for n in jnotes %}<li><small>{{ n['created_at'] }}</small><br>{{ n['body'] }}</li>{% else %}<li>No notes.</li>{% endfor %}</ul>
+  <form method="post" action="{{ url_for('add_job_note', site_id=site['id'], job_id=job['id']) }}"><textarea name="body" placeholder="Add a job note..."></textarea><button type="submit">Add Note</button></form>
+</section>
+</main>
+<script>
+document.getElementById('shareJobBtn').addEventListener('click', async () => {
+  const resp = await fetch('{{ url_for('share_create_job', job_id=job['id']) }}', {method:'POST'});
+  const data = await resp.json();
+  const out = document.getElementById('shareJobOut');
+  out.value = data.link;
+  try { await navigator.clipboard.writeText(data.link); } catch(e){}
+});
+</script>
+</body></html>

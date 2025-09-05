@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+  <title>{{ header_title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+</head>
+<body>
+<header>
+  <h1 id="appTitle">WellAtlas by Henry Suden</h1>
+  <nav>
+    <a href="{{ url_for('deleted_sites') }}">Deleted Sites</a>
+    <a href="{{ url_for('customers_index') }}">Customers</a>
+  </nav>
+  <form id="searchForm" onsubmit="return false;">
+    <input id="searchInput" placeholder="Search sites & notes">
+    <select id="jobFilter">
+      <option value="">All Jobs</option>
+      <option>Domestic</option><option>Drilling</option><option>Ag</option><option>Electrical</option>
+    </select>
+    <select id="customerFilter"><option value="">All Customers</option></select>
+    <button type="button" class="primary" onclick="refreshSites()">Search</button>
+  </form>
+</header>
+<main>
+  <div id="map"></div>
+  <aside>
+    <div class="card">
+      <h3>Sites</h3>
+      <ul id="siteList" class="list"></ul>
+    </div>
+  </aside>
+</main>
+<script>
+const streets = L.tileLayer(`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key={{ maptiler_key }}`, {
+  attribution: '&copy; MapTiler &copy; OpenStreetMap contributors'
+});
+const hybrid = L.tileLayer(`https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key={{ maptiler_key }}`, {
+  attribution: '&copy; MapTiler &copy; OpenStreetMap contributors'
+});
+const satellite = L.tileLayer(`https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key={{ maptiler_key }}`, {
+  attribution: '&copy; MapTiler'
+});
+const map = L.map('map', { center:[39.9,-122.0], zoom:9, layers:[hybrid] });
+L.control.layers({ "Hybrid": hybrid, "Streets": streets, "Satellite (no labels)": satellite }).addTo(map);
+
+let markersLayer = L.layerGroup().addTo(map);
+let currentMarkers = [];
+
+async function loadCustomers(){
+  try {
+    const r = await fetch('/api/customers'); const data = await r.json();
+    const sel = document.getElementById('customerFilter');
+    sel.innerHTML = '<option value="">All Customers</option>' + data.map(c=>`<option>${c.name}</option>`).join('');
+  } catch(e){ console.error(e); }
+}
+
+function addMarker(site){
+  if(!site.latitude || !site.longitude) return;
+  const m = L.marker([site.latitude, site.longitude]);
+  const html = `<strong>${site.customer} — ${site.name}</strong><br><a href="/site/${site.id}">View site</a>`;
+  m.bindPopup(html);
+  markersLayer.addLayer(m);
+  currentMarkers.push(m);
+}
+
+async function refreshSites(){
+  markersLayer.clearLayers();
+  currentMarkers = [];
+  const q = document.getElementById('searchInput').value || "";
+  const job = document.getElementById('jobFilter').value || "";
+  const cust = document.getElementById('customerFilter').value || "";
+  const resp = await fetch(`/api/sites?q=${encodeURIComponent(q)}&job=${encodeURIComponent(job)}&customer=${encodeURIComponent(cust)}`);
+  const data = await resp.json();
+  const list = document.getElementById('siteList');
+  list.innerHTML = data.map(s => `<li><a href="/site/${s.id}">${s.customer} — ${s.name}</a></li>`).join('');
+  data.forEach(addMarker);
+  if(currentMarkers.length){
+    const group = L.featureGroup(currentMarkers);
+    map.fitBounds(group.getBounds().pad(0.2));
+  }
+}
+
+document.getElementById('jobFilter').addEventListener('change', refreshSites);
+document.getElementById('customerFilter').addEventListener('change', refreshSites);
+
+loadCustomers().then(refreshSites);
+</script>
+</body>
+</html>

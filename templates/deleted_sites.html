@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head><title>{{ header_title }}</title><link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"></head>
+<body>
+<header>
+  <h1 id="appTitle">WellAtlas by Henry Suden</h1>
+  <nav><a href="{{ url_for('index') }}">Home</a> <a href="{{ url_for('customers_index') }}">Customers</a></nav>
+</header>
+<main class="wrap">
+<section class="card">
+  <h2>Deleted Sites</h2>
+  <ul class="list">
+    {% for s in sites %}
+      <li><strong>{{ s['customer'] }} — {{ s['name'] }}</strong>
+        <form style="display:inline" method="post" action="{{ url_for('restore_site', site_id=s['id']) }}"><button type="submit" class="link">Restore</button></form>
+      </li>
+    {% else %}<li>Nothing here.</li>{% endfor %}
+  </ul>
+</section>
+</main>
+</body></html>

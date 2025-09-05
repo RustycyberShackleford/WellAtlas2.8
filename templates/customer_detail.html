@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head><title>{{ header_title }}</title><link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"></head>
+<body>
+<header>
+  <h1 id="appTitle">WellAtlas by Henry Suden</h1>
+  <nav><a href="{{ url_for('index') }}">Home</a> <a href="{{ url_for('customers_index') }}">Customers</a> <a href="{{ url_for('deleted_sites') }}">Deleted Sites</a></nav>
+</header>
+<main class="wrap">
+<section class="card">
+  <h2>{{ customer['name'] }}</h2>
+  <p><strong>Address:</strong> {{ customer['address'] or '—' }}</p>
+  <p><strong>Phone:</strong> {{ customer['phone'] or '—' }}</p>
+  <p><strong>Email:</strong> {{ customer['email'] or '—' }}</p>
+  <p>{{ customer['notes'] or '' }}</p>
+  <p>
+    <button id="shareCustBtn" class="primary" type="button">Create Share Link</button>
+    <input id="shareCustOut" placeholder="Share link will appear here..." readonly style="width:100%; margin-top:6px;">
+  </p>
+</section>
+
+<section class="card">
+  <h3>Photos</h3>
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('customer_upload', cid=customer['id']) }}">
+    <input type="file" name="photo" accept="image/*">
+    <input type="text" name="caption" placeholder="Caption (optional)">
+    <button type="submit">Add Photo</button>
+  </form>
+  <div class="photos">
+    {% for p in photos %}<figure><img src="{{ url_for('uploaded_file', filename=p['filename']) }}" alt=""><figcaption>{{ p['caption'] or '' }}</figcaption></figure>{% else %}<p>No photos.</p>{% endfor %}
+  </div>
+</section>
+
+<section class="card">
+  <h3>Sites</h3>
+  <ul class="list">
+    {% for s in sites %}<li><a href="{{ url_for('site_detail', site_id=s['id']) }}">{{ s['name'] }}</a></li>{% else %}<li>No sites.</li>{% endfor %}
+  </ul>
+</section>
+</main>
+<script>
+document.getElementById('shareCustBtn').addEventListener('click', async () => {
+  const r = await fetch('{{ url_for('share_create_customer', cid=customer['id']) }}', {method:'POST'});
+  const j = await r.json(); document.getElementById('shareCustOut').value = j.link;
+  try { await navigator.clipboard.writeText(j.link); } catch(e){}
+});
+</script>
+</body></html>
